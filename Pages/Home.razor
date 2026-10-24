@@ -1,0 +1,66 @@
+﻿@page "/"
+@using BlazorPokeApi.Models
+@inject HttpClient Http
+
+<PageTitle>Buscar Pokémon</PageTitle>
+
+<h1>Buscar Pokémon</h1>
+
+<div class="mb-3">
+    <label class="form-label">Nome do Pokémon:</label>
+    <input type="text" @bind="pokemonName" class="form-control" style="max-width: 400px;" placeholder="Ex: pikachu, ditto..." />
+</div>
+<button class="btn btn-primary mb-4" @onclick="ProcurarPokemon">Buscar Pokémon</button>
+
+@if (isLoading)
+{
+    <p>A carregar dados...</p>
+}
+else if (pokemon != null)
+{
+    <h2>Detalhes do Pokémon</h2>
+    
+    <div>
+        <!-- A imagem é obtida obrigatoriamente do nó official-artwork -> front_default -->
+        <img src="@pokemon.Sprites.Other.OfficialArtwork.FrontDefault" alt="Imagem do @pokemon.Name" width="150" />
+        
+        <p><strong>ID:</strong> @pokemon.Id</p>
+        <p><strong>Nome:</strong> @pokemon.Name</p>
+        <p><strong>Altura:</strong> @(pokemon.Height / 10.0) m</p>
+        <p><strong>Peso:</strong> @(pokemon.Weight / 10.0) kg</p>
+    </div>
+}
+else if (erro)
+{
+    <p class="text-danger">Pokémon não encontrado. Verifica o nome e tenta novamente.</p>
+}
+
+@code {
+    private string pokemonName = string.Empty;
+    private Pokemon? pokemon;
+    private bool isLoading = false;
+    private bool erro = false;
+
+    private async Task ProcurarPokemon()
+    {
+        if (string.IsNullOrWhiteSpace(pokemonName)) return;
+
+        isLoading = true;
+        erro = false;
+        pokemon = null;
+
+        try
+        {
+            
+            pokemon = await Http.GetFromJsonAsync<Pokemon>($"https://pokeapi.co/api/v2/pokemon/{pokemonName.ToLower()}");
+        }
+        catch (Exception)
+        {
+            erro = true; 
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
